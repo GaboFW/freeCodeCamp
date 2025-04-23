@@ -15,26 +15,25 @@ app.use("/public", express.static(`${process.cwd()}/public`));
 
 // Middleware
 app.use((req, res, next) => {
-  if (req.method === "POST") {
-    const url = req.body.url;
-
-    if (!url) {
-      return res.status(400).json({ error: "invalid url" });
-    }
-
+  if (req.method === 'POST' && req.body.url) {
+    let hostname;
     try {
-      const hostname = new URL(url).hostname;
-
-      dns.lookup(hostname, (err) => {
-        if (err) {
-          return res.status(400).json({ error: "invalid url" });
-        }
-        next();
-      });
-    } catch (e) {
-      return res.status(400).json({ error: "invalid url" });
+      const parsedUrl = new URL(req.body.url);
+      
+      hostname = parsedUrl.hostname;
     }
-  } else {
+    catch (e) {
+      return res.json({ error: 'invalid url' });
+    }
+
+    dns.lookup(hostname, (err) => {
+      if (err) {
+        return res.json({ error: 'invalid url' });
+      }
+      next();
+    });
+  }
+  else {
     next();
   }
 });
